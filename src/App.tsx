@@ -269,7 +269,8 @@ function AppContent() {
 }
 
 export default function App() {
-  const tamboApiKey = localStorage.getItem('TAMBO_KEY') || '';
+  // Read from env variable first, then localStorage as fallback
+  const tamboApiKey = import.meta.env.VITE_TAMBO_API_KEY || localStorage.getItem('TAMBO_KEY') || '';
 
   if (!tamboApiKey) {
     return (

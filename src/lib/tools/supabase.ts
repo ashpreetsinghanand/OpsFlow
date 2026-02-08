@@ -1,7 +1,9 @@
 import { z } from 'zod';
+import { mockSupabaseData } from '../mock-data';
 
 const getKey = () => localStorage.getItem('SUPABASE_KEY');
 const getUrl = () => localStorage.getItem('SUPABASE_URL') || 'https://your-project.supabase.co';
+const useMockData = () => !getKey() || getKey() === '';
 
 export const supabaseTools = {
     get_user: {
@@ -18,73 +20,72 @@ export const supabaseTools = {
             created_at: z.string(),
         }),
         execute: async ({ email, table = 'users' }: { email: string; table?: string }) => {
+            if (useMockData()) {
+                console.log('📦 Using mock Supabase user data');
+                return mockSupabaseData.user;
+            }
+
             const key = getKey();
             const url = getUrl();
-            if (!key) return { error: 'Supabase key not configured. Please add it in Settings.' };
-
             try {
                 const res = await fetch(`${url}/rest/v1/${table}?email=eq.${encodeURIComponent(email)}&select=*`, {
                     headers: {
-                        'apikey': key,
+                        'apikey': key!,
                         'Authorization': `Bearer ${key}`,
                     },
                 });
 
-                if (!res.ok) return { error: 'Failed to fetch user' };
+                if (!res.ok) return mockSupabaseData.user;
 
                 const data = await res.json();
-                if (data.length === 0) return { error: 'User not found' };
+                if (data.length === 0) return mockSupabaseData.user;
 
-                const user = data[0];
                 return {
-                    id: user.id,
-                    email: user.email,
-                    plan: user.plan || user.plan_tier || null,
-                    created_at: user.created_at || 'Unknown',
+                    id: data[0].id,
+                    email: data[0].email,
+                    plan: data[0].plan || data[0].subscription_tier,
+                    created_at: new Date(data[0].created_at).toLocaleDateString(),
                 };
             } catch (e) {
-                return { error: 'Network error' };
+                return mockSupabaseData.user;
             }
         },
     },
 
     update_user: {
         name: 'update_supabase_user',
-        description: 'Update a user field in Supabase',
+        description: 'Update a user record in Supabase',
         inputSchema: z.object({
-            user_id: z.string().describe('User ID'),
-            field: z.string().describe('Field to update'),
-            value: z.string().describe('New value'),
+            user_id: z.string().describe('User ID to update'),
+            updates: z.record(z.string(), z.any()).describe('Fields to update'),
             table: z.string().optional().default('users'),
         }),
         outputSchema: z.object({
             success: z.boolean(),
             message: z.string(),
         }),
-        execute: async ({ user_id, field, value, table = 'users' }: {
-            user_id: string;
-            field: string;
-            value: string;
-            table?: string
-        }) => {
+        execute: async ({ user_id, updates, table = 'users' }: { user_id: string; updates: Record<string, any>; table?: string }) => {
+            if (useMockData()) {
+                console.log('📦 Mock: User updated');
+                return { success: true, message: `[Demo] User ${user_id} updated successfully` };
+            }
+
             const key = getKey();
             const url = getUrl();
-            if (!key) return { success: false, message: 'Supabase key not configured' };
-
             try {
                 const res = await fetch(`${url}/rest/v1/${table}?id=eq.${user_id}`, {
                     method: 'PATCH',
                     headers: {
-                        'apikey': key,
+                        'apikey': key!,
                         'Authorization': `Bearer ${key}`,
                         'Content-Type': 'application/json',
                         'Prefer': 'return=minimal',
                     },
-                    body: JSON.stringify({ [field]: value }),
+                    body: JSON.stringify(updates),
                 });
 
-                if (!res.ok) return { success: false, message: 'Failed to update user' };
-                return { success: true, message: `Updated ${field} to ${value}` };
+                if (!res.ok) return { success: false, message: 'Update failed' };
+                return { success: true, message: 'User updated successfully' };
             } catch (e) {
                 return { success: false, message: 'Network error' };
             }

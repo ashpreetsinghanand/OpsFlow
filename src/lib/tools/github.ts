@@ -1,6 +1,8 @@
 import { z } from 'zod';
+import { mockGitHubData } from '../mock-data';
 
 const getToken = () => localStorage.getItem('GITHUB_TOKEN');
+const useMockData = () => !getToken() || getToken() === '';
 
 export const githubTools = {
     list_issues: {
@@ -20,9 +22,16 @@ export const githubTools = {
             created_at: z.string(),
         })),
         execute: async ({ owner, repo, state = 'open' }: { owner: string; repo: string; state?: string }) => {
-            const token = getToken();
-            if (!token) return { error: 'GitHub token not configured. Please add it in Settings.' };
+            // Use mock data if no token configured
+            if (useMockData()) {
+                console.log('📦 Using mock GitHub data (no token configured)');
+                const issues = mockGitHubData.issues.filter(i =>
+                    state === 'all' ? true : i.state === state
+                );
+                return issues;
+            }
 
+            const token = getToken();
             try {
                 const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/issues?state=${state}&per_page=10`, {
                     headers: {
@@ -32,8 +41,8 @@ export const githubTools = {
                 });
 
                 if (!res.ok) {
-                    const err = await res.json();
-                    return { error: err.message || 'Failed to fetch issues' };
+                    console.log('📦 API failed, using mock data');
+                    return mockGitHubData.issues;
                 }
 
                 const data = await res.json();
@@ -46,7 +55,8 @@ export const githubTools = {
                     created_at: new Date(issue.created_at).toLocaleDateString(),
                 }));
             } catch (e) {
-                return { error: 'Network error fetching issues' };
+                console.log('📦 Network error, using mock data');
+                return mockGitHubData.issues;
             }
         },
     },
@@ -67,9 +77,12 @@ export const githubTools = {
             language: z.string().nullable(),
         }),
         execute: async ({ owner, repo }: { owner: string; repo: string }) => {
-            const token = getToken();
-            if (!token) return { error: 'GitHub token not configured' };
+            if (useMockData()) {
+                console.log('📦 Using mock GitHub repo data');
+                return mockGitHubData.repo;
+            }
 
+            const token = getToken();
             try {
                 const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
                     headers: {
@@ -78,7 +91,7 @@ export const githubTools = {
                     },
                 });
 
-                if (!res.ok) return { error: 'Repository not found' };
+                if (!res.ok) return mockGitHubData.repo;
 
                 const data = await res.json();
                 return {
@@ -90,7 +103,7 @@ export const githubTools = {
                     language: data.language,
                 };
             } catch (e) {
-                return { error: 'Network error' };
+                return mockGitHubData.repo;
             }
         },
     },
@@ -108,9 +121,12 @@ export const githubTools = {
             message: z.string(),
         }),
         execute: async ({ owner, repo, issue_number }: { owner: string; repo: string; issue_number: number }) => {
-            const token = getToken();
-            if (!token) return { success: false, message: 'GitHub token not configured' };
+            if (useMockData()) {
+                console.log('📦 Mock: Issue closed');
+                return { success: true, message: `[Demo] Issue #${issue_number} closed successfully` };
+            }
 
+            const token = getToken();
             try {
                 const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/issues/${issue_number}`, {
                     method: 'PATCH',

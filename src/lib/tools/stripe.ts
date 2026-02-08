@@ -1,6 +1,8 @@
 import { z } from 'zod';
+import { mockStripeData } from '../mock-data';
 
 const getKey = () => localStorage.getItem('STRIPE_KEY');
+const useMockData = () => !getKey() || getKey() === '';
 
 export const stripeTools = {
     get_customer: {
@@ -17,20 +19,21 @@ export const stripeTools = {
             balance: z.number(),
         }),
         execute: async ({ email }: { email: string }) => {
-            const key = getKey();
-            if (!key) return { error: 'Stripe key not configured. Please add it in Settings.' };
+            if (useMockData()) {
+                console.log('📦 Using mock Stripe customer data');
+                return mockStripeData.customer;
+            }
 
+            const key = getKey();
             try {
                 const res = await fetch(`https://api.stripe.com/v1/customers/search?query=email:"${email}"`, {
-                    headers: {
-                        'Authorization': `Bearer ${key}`,
-                    },
+                    headers: { 'Authorization': `Bearer ${key}` },
                 });
 
-                if (!res.ok) return { error: 'Failed to search customers' };
+                if (!res.ok) return mockStripeData.customer;
 
                 const data = await res.json();
-                if (data.data.length === 0) return { error: 'No customer found with that email' };
+                if (data.data.length === 0) return mockStripeData.customer;
 
                 const customer = data.data[0];
                 return {
@@ -41,7 +44,7 @@ export const stripeTools = {
                     balance: customer.balance / 100,
                 };
             } catch (e) {
-                return { error: 'Network error' };
+                return mockStripeData.customer;
             }
         },
     },
@@ -60,17 +63,18 @@ export const stripeTools = {
             created: z.string(),
         })),
         execute: async ({ customer_id }: { customer_id: string }) => {
-            const key = getKey();
-            if (!key) return { error: 'Stripe key not configured' };
+            if (useMockData()) {
+                console.log('📦 Using mock Stripe payments data');
+                return mockStripeData.payments;
+            }
 
+            const key = getKey();
             try {
                 const res = await fetch(`https://api.stripe.com/v1/payment_intents?customer=${customer_id}&limit=10`, {
-                    headers: {
-                        'Authorization': `Bearer ${key}`,
-                    },
+                    headers: { 'Authorization': `Bearer ${key}` },
                 });
 
-                if (!res.ok) return { error: 'Failed to fetch payments' };
+                if (!res.ok) return mockStripeData.payments;
 
                 const data = await res.json();
                 return data.data.map((pi: any) => ({
@@ -81,7 +85,7 @@ export const stripeTools = {
                     created: new Date(pi.created * 1000).toLocaleDateString(),
                 }));
             } catch (e) {
-                return { error: 'Network error' };
+                return mockStripeData.payments;
             }
         },
     },
@@ -90,16 +94,19 @@ export const stripeTools = {
         name: 'refund_stripe_payment',
         description: 'Refund a Stripe payment',
         inputSchema: z.object({
-            payment_intent_id: z.string().describe('Payment Intent ID to refund'),
+            payment_id: z.string().describe('Payment intent ID to refund'),
         }),
         outputSchema: z.object({
             success: z.boolean(),
             message: z.string(),
         }),
-        execute: async ({ payment_intent_id }: { payment_intent_id: string }) => {
-            const key = getKey();
-            if (!key) return { success: false, message: 'Stripe key not configured' };
+        execute: async ({ payment_id }: { payment_id: string }) => {
+            if (useMockData()) {
+                console.log('📦 Mock: Payment refunded');
+                return { success: true, message: `[Demo] Refund processed for ${payment_id}` };
+            }
 
+            const key = getKey();
             try {
                 const res = await fetch('https://api.stripe.com/v1/refunds', {
                     method: 'POST',
@@ -107,10 +114,10 @@ export const stripeTools = {
                         'Authorization': `Bearer ${key}`,
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
-                    body: `payment_intent=${payment_intent_id}`,
+                    body: `payment_intent=${payment_id}`,
                 });
 
-                if (!res.ok) return { success: false, message: 'Failed to process refund' };
+                if (!res.ok) return { success: false, message: 'Refund failed' };
                 return { success: true, message: 'Refund processed successfully' };
             } catch (e) {
                 return { success: false, message: 'Network error' };

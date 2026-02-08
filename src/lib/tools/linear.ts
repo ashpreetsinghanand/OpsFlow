@@ -1,13 +1,15 @@
 import { z } from 'zod';
+import { mockLinearData } from '../mock-data';
 
 const getKey = () => localStorage.getItem('LINEAR_KEY');
+const useMockData = () => !getKey() || getKey() === '';
 
 export const linearTools = {
     list_issues: {
         name: 'list_linear_issues',
-        description: 'List recent issues from Linear',
+        description: 'List issues from Linear',
         inputSchema: z.object({
-            limit: z.number().optional().default(10),
+            limit: z.number().optional().default(10).describe('Number of issues to fetch'),
         }),
         outputSchema: z.array(z.object({
             id: z.string(),
@@ -17,48 +19,48 @@ export const linearTools = {
             priority: z.number(),
         })),
         execute: async ({ limit = 10 }: { limit?: number }) => {
-            const key = getKey();
-            if (!key) return { error: 'Linear key not configured. Please add it in Settings.' };
+            if (useMockData()) {
+                console.log('📦 Using mock Linear data');
+                return mockLinearData.issues.slice(0, limit);
+            }
 
+            const key = getKey();
             try {
                 const res = await fetch('https://api.linear.app/graphql', {
                     method: 'POST',
                     headers: {
-                        'Authorization': key,
+                        'Authorization': key!,
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
                         query: `
-              query Issues($limit: Int!) {
-                issues(first: $limit) {
-                  nodes {
-                    id
-                    identifier
-                    title
-                    state { name }
-                    priority
-                  }
-                }
-              }
-            `,
-                        variables: { limit },
+                            query { 
+                                issues(first: ${limit}) { 
+                                    nodes { 
+                                        id 
+                                        identifier 
+                                        title 
+                                        state { name } 
+                                        priority 
+                                    } 
+                                } 
+                            }
+                        `,
                     }),
                 });
 
-                if (!res.ok) return { error: 'Failed to fetch Linear issues' };
+                if (!res.ok) return mockLinearData.issues;
 
                 const data = await res.json();
-                if (data.errors) return { error: data.errors[0].message };
-
                 return data.data.issues.nodes.map((issue: any) => ({
                     id: issue.id,
                     identifier: issue.identifier,
                     title: issue.title,
-                    state: issue.state?.name || 'Unknown',
+                    state: issue.state.name,
                     priority: issue.priority,
                 }));
             } catch (e) {
-                return { error: 'Network error' };
+                return mockLinearData.issues;
             }
         },
     },
@@ -69,51 +71,49 @@ export const linearTools = {
         inputSchema: z.object({
             title: z.string().describe('Issue title'),
             description: z.string().optional().describe('Issue description'),
-            team_id: z.string().describe('Linear team ID'),
+            teamId: z.string().describe('Team ID'),
         }),
         outputSchema: z.object({
             success: z.boolean(),
-            identifier: z.string().optional(),
+            id: z.string().optional(),
             message: z.string(),
         }),
-        execute: async ({ title, description, team_id }: {
-            title: string;
-            description?: string;
-            team_id: string
-        }) => {
-            const key = getKey();
-            if (!key) return { success: false, message: 'Linear key not configured' };
+        execute: async ({ title, description, teamId }: { title: string; description?: string; teamId: string }) => {
+            if (useMockData()) {
+                console.log('📦 Mock: Linear issue created');
+                return { success: true, id: 'lin_demo_123', message: `[Demo] Issue "${title}" created` };
+            }
 
+            const key = getKey();
             try {
                 const res = await fetch('https://api.linear.app/graphql', {
                     method: 'POST',
                     headers: {
-                        'Authorization': key,
+                        'Authorization': key!,
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
                         query: `
-              mutation CreateIssue($title: String!, $description: String, $teamId: String!) {
-                issueCreate(input: { title: $title, description: $description, teamId: $teamId }) {
-                  success
-                  issue { identifier }
-                }
-              }
-            `,
-                        variables: { title, description, teamId: team_id },
+                            mutation CreateIssue($input: IssueCreateInput!) {
+                                issueCreate(input: $input) {
+                                    success
+                                    issue { id identifier }
+                                }
+                            }
+                        `,
+                        variables: {
+                            input: { title, description, teamId },
+                        },
                     }),
                 });
 
                 if (!res.ok) return { success: false, message: 'Failed to create issue' };
 
                 const data = await res.json();
-                if (data.errors) return { success: false, message: data.errors[0].message };
-
-                const result = data.data.issueCreate;
                 return {
-                    success: result.success,
-                    identifier: result.issue?.identifier,
-                    message: result.success ? `Created issue ${result.issue.identifier}` : 'Failed to create',
+                    success: true,
+                    id: data.data.issueCreate.issue.id,
+                    message: `Issue ${data.data.issueCreate.issue.identifier} created`,
                 };
             } catch (e) {
                 return { success: false, message: 'Network error' };

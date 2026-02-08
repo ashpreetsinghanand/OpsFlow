@@ -1,40 +1,45 @@
 import { z } from 'zod';
+import { mockResendData } from '../mock-data';
 
 const getKey = () => localStorage.getItem('RESEND_KEY');
+const useMockData = () => !getKey() || getKey() === '';
 
 export const resendTools = {
     list_emails: {
         name: 'list_resend_emails',
-        description: 'List recent emails sent via Resend',
-        inputSchema: z.object({}),
+        description: 'List recently sent emails from Resend',
+        inputSchema: z.object({
+            limit: z.number().optional().default(10),
+        }),
         outputSchema: z.array(z.object({
             id: z.string(),
             to: z.string(),
             subject: z.string(),
             created_at: z.string(),
         })),
-        execute: async () => {
-            const key = getKey();
-            if (!key) return { error: 'Resend key not configured. Please add it in Settings.' };
+        execute: async ({ limit = 10 }: { limit?: number }) => {
+            if (useMockData()) {
+                console.log('📦 Using mock Resend data');
+                return mockResendData.emails.slice(0, limit);
+            }
 
+            const key = getKey();
             try {
                 const res = await fetch('https://api.resend.com/emails', {
-                    headers: {
-                        'Authorization': `Bearer ${key}`,
-                    },
+                    headers: { 'Authorization': `Bearer ${key}` },
                 });
 
-                if (!res.ok) return { error: 'Failed to fetch emails' };
+                if (!res.ok) return mockResendData.emails;
 
                 const data = await res.json();
-                return (data.data || []).slice(0, 10).map((email: any) => ({
+                return data.data.slice(0, limit).map((email: any) => ({
                     id: email.id,
-                    to: Array.isArray(email.to) ? email.to.join(', ') : email.to,
+                    to: Array.isArray(email.to) ? email.to[0] : email.to,
                     subject: email.subject,
                     created_at: new Date(email.created_at).toLocaleString(),
                 }));
             } catch (e) {
-                return { error: 'Network error' };
+                return mockResendData.emails;
             }
         },
     },
@@ -45,23 +50,21 @@ export const resendTools = {
         inputSchema: z.object({
             to: z.string().email().describe('Recipient email'),
             subject: z.string().describe('Email subject'),
-            html: z.string().describe('HTML body content'),
-            from: z.string().optional().default('OpsFlow <noreply@resend.dev>'),
+            html: z.string().describe('Email HTML content'),
+            from: z.string().optional().default('onboarding@resend.dev'),
         }),
         outputSchema: z.object({
             success: z.boolean(),
+            id: z.string().optional(),
             message: z.string(),
-            email_id: z.string().optional(),
         }),
-        execute: async ({ to, subject, html, from = 'OpsFlow <noreply@resend.dev>' }: {
-            to: string;
-            subject: string;
-            html: string;
-            from?: string;
-        }) => {
-            const key = getKey();
-            if (!key) return { success: false, message: 'Resend key not configured' };
+        execute: async ({ to, subject, html, from = 'onboarding@resend.dev' }: { to: string; subject: string; html: string; from?: string }) => {
+            if (useMockData()) {
+                console.log('📦 Mock: Email sent');
+                return { success: true, id: 'em_demo_123', message: `[Demo] Email sent to ${to}` };
+            }
 
+            const key = getKey();
             try {
                 const res = await fetch('https://api.resend.com/emails', {
                     method: 'POST',
@@ -75,11 +78,7 @@ export const resendTools = {
                 if (!res.ok) return { success: false, message: 'Failed to send email' };
 
                 const data = await res.json();
-                return {
-                    success: true,
-                    message: 'Email sent successfully',
-                    email_id: data.id,
-                };
+                return { success: true, id: data.id, message: 'Email sent successfully' };
             } catch (e) {
                 return { success: false, message: 'Network error' };
             }

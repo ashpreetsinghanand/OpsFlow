@@ -57,14 +57,21 @@ export const supabaseTools = {
         description: 'Update a user record in Supabase',
         inputSchema: z.object({
             user_id: z.string().describe('User ID to update'),
-            updates: z.record(z.string(), z.any()).describe('Fields to update'),
+            plan: z.string().optional().describe('New plan/subscription tier'),
+            name: z.string().optional().describe('New name'),
+            email: z.string().optional().describe('New email'),
             table: z.string().optional().default('users'),
         }),
         outputSchema: z.object({
             success: z.boolean(),
             message: z.string(),
         }),
-        execute: async ({ user_id, updates, table = 'users' }: { user_id: string; updates: Record<string, any>; table?: string }) => {
+        execute: async ({ user_id, plan, name, email, table = 'users' }: { user_id: string; plan?: string; name?: string; email?: string; table?: string }) => {
+            const updates: Record<string, string> = {};
+            if (plan) updates.plan = plan;
+            if (name) updates.name = name;
+            if (email) updates.email = email;
+
             if (useMockData()) {
                 console.log('📦 Mock: User updated');
                 return { success: true, message: `[Demo] User ${user_id} updated successfully` };

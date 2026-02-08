@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { TamboProvider, useTamboThread, useTamboThreadInput } from '@tambo-ai/react';
 import { Settings as SettingsIcon, Send, Zap, Github, CreditCard, Database, CheckSquare, Mail } from 'lucide-react';
 import { Settings } from './components/Settings';

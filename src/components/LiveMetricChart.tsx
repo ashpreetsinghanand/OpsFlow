@@ -22,10 +22,22 @@ export function LiveMetricChart({
     title,
     unit = ''
 }: LiveMetricChartProps) {
+    const formatValue = (value: number | undefined) => {
+        if (value === undefined) return ['', title];
+        return [`${value}${unit}`, title];
+    };
+
     const renderChart = () => {
         const commonProps = {
             data,
             margin: { top: 10, right: 10, left: -20, bottom: 0 },
+        };
+
+        const tooltipStyle = {
+            backgroundColor: 'white',
+            border: '1px solid #e5e7eb',
+            borderRadius: '12px',
+            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
         };
 
         switch (chartType) {
@@ -35,15 +47,7 @@ export function LiveMetricChart({
                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                         <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#9ca3af" />
                         <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" />
-                        <Tooltip
-                            contentStyle={{
-                                backgroundColor: 'white',
-                                border: '1px solid #e5e7eb',
-                                borderRadius: '12px',
-                                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                            }}
-                            formatter={(value: number) => [`${value}${unit}`, title]}
-                        />
+                        <Tooltip contentStyle={tooltipStyle} formatter={formatValue} />
                         <Bar dataKey="value" fill={color} radius={[4, 4, 0, 0]} />
                     </BarChart>
                 );
@@ -53,15 +57,7 @@ export function LiveMetricChart({
                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                         <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#9ca3af" />
                         <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" />
-                        <Tooltip
-                            contentStyle={{
-                                backgroundColor: 'white',
-                                border: '1px solid #e5e7eb',
-                                borderRadius: '12px',
-                                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                            }}
-                            formatter={(value: number) => [`${value}${unit}`, title]}
-                        />
+                        <Tooltip contentStyle={tooltipStyle} formatter={formatValue} />
                         <Area type="monotone" dataKey="value" stroke={color} fill={`${color}20`} strokeWidth={2} />
                     </AreaChart>
                 );
@@ -71,15 +67,7 @@ export function LiveMetricChart({
                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                         <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#9ca3af" />
                         <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" />
-                        <Tooltip
-                            contentStyle={{
-                                backgroundColor: 'white',
-                                border: '1px solid #e5e7eb',
-                                borderRadius: '12px',
-                                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                            }}
-                            formatter={(value: number) => [`${value}${unit}`, title]}
-                        />
+                        <Tooltip contentStyle={tooltipStyle} formatter={formatValue} />
                         <Line type="monotone" dataKey="value" stroke={color} strokeWidth={2} dot={{ fill: color, strokeWidth: 0 }} />
                     </LineChart>
                 );

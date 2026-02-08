@@ -1,4 +1,4 @@
-import { MouseEventHandler } from 'react';
+import type { MouseEventHandler } from 'react';
 import { AlertTriangle, Zap, RotateCcw, Send, Trash2, RefreshCw, Plus, CheckCircle } from 'lucide-react';
 
 type Intent = 'primary' | 'success' | 'warning' | 'danger' | 'default';

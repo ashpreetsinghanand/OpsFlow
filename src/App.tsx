@@ -17,50 +17,79 @@ function ChatInterface() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
         {thread?.messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center mb-4">
-              <Zap className="text-indigo-600" size={32} />
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+            textAlign: 'center',
+            padding: '20px'
+          }}>
+            <div style={{
+              width: '64px',
+              height: '64px',
+              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              borderRadius: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '16px'
+            }}>
+              <Zap color="white" size={32} />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Start Your Investigation</h3>
-            <p className="text-sm text-gray-500 max-w-xs">
+            <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#111827', marginBottom: '8px' }}>
+              Start Your Investigation
+            </h3>
+            <p style={{ fontSize: '14px', color: '#6b7280', maxWidth: '280px', lineHeight: 1.5 }}>
               Ask about users, payments, issues, or emails. OpsFlow will fetch real data and show you what matters.
             </p>
-            <div className="mt-6 space-y-2 text-xs text-gray-400">
-              <p>"List issues for owner/repo"</p>
-              <p>"Check Stripe customer for email@..."</p>
-              <p>"Show recent Linear tickets"</p>
+            <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <p style={{ fontSize: '12px', color: '#9ca3af' }}>"List issues for owner/repo"</p>
+              <p style={{ fontSize: '12px', color: '#9ca3af' }}>"Check Stripe customer for email@..."</p>
+              <p style={{ fontSize: '12px', color: '#9ca3af' }}>"Show recent Linear tickets"</p>
             </div>
           </div>
         )}
 
         {thread?.messages.map((message) => (
-          <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${message.role === 'user'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-100 text-gray-900'
-              }`}>
+          <div
+            key={message.id}
+            style={{
+              display: 'flex',
+              justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
+              marginBottom: '12px'
+            }}
+          >
+            <div style={{
+              maxWidth: '85%',
+              borderRadius: '16px',
+              padding: '12px 16px',
+              background: message.role === 'user' ? '#6366f1' : '#f3f4f6',
+              color: message.role === 'user' ? 'white' : '#111827'
+            }}>
               {Array.isArray(message.content) ? (
                 message.content.map((part, i) => (
-                  part.type === 'text' ? <p key={i} className="text-sm">{part.text}</p> : null
+                  part.type === 'text' ? <p key={i} style={{ fontSize: '14px', margin: 0 }}>{part.text}</p> : null
                 ))
               ) : (
-                <p className="text-sm">{String(message.content)}</p>
+                <p style={{ fontSize: '14px', margin: 0 }}>{String(message.content)}</p>
               )}
             </div>
           </div>
         ))}
 
         {isPending && (
-          <div className="flex justify-start">
-            <div className="bg-gray-100 rounded-2xl px-4 py-3">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce [animation-delay:0.1s]" />
-                <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce [animation-delay:0.2s]" />
+          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+            <div style={{ background: '#f3f4f6', borderRadius: '16px', padding: '12px 16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: 8, height: 8, background: '#6366f1', borderRadius: '50%', animation: 'bounce 1s infinite' }} />
+                <div style={{ width: 8, height: 8, background: '#6366f1', borderRadius: '50%', animation: 'bounce 1s infinite 0.1s' }} />
+                <div style={{ width: 8, height: 8, background: '#6366f1', borderRadius: '50%', animation: 'bounce 1s infinite 0.2s' }} />
               </div>
             </div>
           </div>
@@ -68,20 +97,36 @@ function ChatInterface() {
       </div>
 
       {/* Input */}
-      <form onSubmit={handleSubmit} className="p-4 border-t border-gray-200">
-        <div className="flex gap-2">
+      <form onSubmit={handleSubmit} style={{ padding: '16px', borderTop: '1px solid #e5e7eb' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
           <input
             type="text"
             value={value}
             onChange={(e) => setValue(e.target.value)}
             placeholder="Ask about users, payments, issues..."
-            className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+            style={{
+              flex: 1,
+              padding: '12px 16px',
+              background: '#f9fafb',
+              border: '1px solid #e5e7eb',
+              borderRadius: '12px',
+              fontSize: '14px',
+              outline: 'none'
+            }}
             disabled={isPending}
           />
           <button
             type="submit"
             disabled={isPending || !value.trim()}
-            className="px-4 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            style={{
+              padding: '12px 16px',
+              background: '#6366f1',
+              color: 'white',
+              borderRadius: '12px',
+              border: 'none',
+              cursor: 'pointer',
+              opacity: isPending || !value.trim() ? 0.5 : 1
+            }}
           >
             <Send size={18} />
           </button>
@@ -94,38 +139,58 @@ function ChatInterface() {
 function Canvas() {
   const { thread } = useTamboThread();
 
-  // Collect rendered components from messages
   const renderedComponents = thread?.messages
     .filter((m) => m.renderedComponent)
     .map((m) => m.renderedComponent);
 
+  const tools = [
+    { icon: <Github size={24} />, color: '#18181b', label: 'GitHub' },
+    { icon: <CreditCard size={24} />, color: '#6366f1', label: 'Stripe' },
+    { icon: <Database size={24} />, color: '#10b981', label: 'Supabase' },
+    { icon: <CheckSquare size={24} />, color: '#8b5cf6', label: 'Linear' },
+    { icon: <Mail size={24} />, color: '#18181b', label: 'Resend' },
+  ];
+
   return (
-    <div className="h-full overflow-y-auto p-6">
+    <div style={{ height: '100%', overflowY: 'auto', padding: '24px', background: '#fafafa' }}>
       {(!renderedComponents || renderedComponents.length === 0) ? (
-        <div className="h-full flex flex-col items-center justify-center text-center">
-          <div className="grid grid-cols-5 gap-4 mb-8">
-            {[
-              { icon: <Github size={24} />, color: 'bg-gray-900', label: 'GitHub' },
-              { icon: <CreditCard size={24} />, color: 'bg-indigo-600', label: 'Stripe' },
-              { icon: <Database size={24} />, color: 'bg-emerald-600', label: 'Supabase' },
-              { icon: <CheckSquare size={24} />, color: 'bg-violet-600', label: 'Linear' },
-              { icon: <Mail size={24} />, color: 'bg-black', label: 'Resend' },
-            ].map((tool) => (
-              <div key={tool.label} className="flex flex-col items-center gap-2">
-                <div className={`w-14 h-14 ${tool.color} rounded-2xl flex items-center justify-center text-white shadow-lg`}>
+        <div style={{
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center'
+        }}>
+          <div style={{ display: 'flex', gap: '16px', marginBottom: '32px' }}>
+            {tools.map((tool) => (
+              <div key={tool.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  width: '56px',
+                  height: '56px',
+                  background: tool.color,
+                  borderRadius: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                }}>
                   {tool.icon}
                 </div>
-                <span className="text-xs text-gray-500">{tool.label}</span>
+                <span style={{ fontSize: '12px', color: '#6b7280' }}>{tool.label}</span>
               </div>
             ))}
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Dynamic Canvas</h2>
-          <p className="text-gray-500 max-w-md">
+          <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>
+            Dynamic Canvas
+          </h2>
+          <p style={{ color: '#6b7280', maxWidth: '400px', lineHeight: 1.5 }}>
             Components will appear here based on your queries. The AI decides which interface to show you.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px' }}>
           {renderedComponents.map((component, i) => (
             <div key={i}>{component}</div>
           ))}
@@ -139,25 +204,52 @@ function AppContent() {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div style={{ display: 'flex', height: '100vh', background: '#fafafa' }}>
       {/* Sidebar */}
-      <div className="w-96 bg-white border-r border-gray-200 flex flex-col">
+      <div style={{
+        width: '400px',
+        minWidth: '400px',
+        background: 'white',
+        borderRight: '1px solid #e5e7eb',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
         {/* Header */}
-        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
-              <Zap className="text-white" size={20} />
+        <div style={{
+          padding: '16px',
+          borderBottom: '1px solid #e5e7eb',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <Zap color="white" size={20} />
             </div>
             <div>
-              <h1 className="font-bold text-gray-900">OpsFlow</h1>
-              <p className="text-xs text-gray-500">Universal Admin Console</p>
+              <h1 style={{ fontWeight: 700, color: '#111827', fontSize: '16px', margin: 0 }}>OpsFlow</h1>
+              <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>Universal Admin Console</p>
             </div>
           </div>
           <button
             onClick={() => setSettingsOpen(true)}
-            className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+            style={{
+              padding: '8px',
+              background: 'transparent',
+              border: 'none',
+              borderRadius: '12px',
+              cursor: 'pointer'
+            }}
           >
-            <SettingsIcon size={20} className="text-gray-500" />
+            <SettingsIcon size={20} color="#6b7280" />
           </button>
         </div>
 
@@ -166,7 +258,7 @@ function AppContent() {
       </div>
 
       {/* Main Canvas */}
-      <div className="flex-1">
+      <div style={{ flex: 1 }}>
         <Canvas />
       </div>
 
@@ -181,38 +273,83 @@ export default function App() {
 
   if (!tamboApiKey) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <Zap className="text-white" size={32} />
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #f0f4ff 0%, #faf5ff 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '16px'
+      }}>
+        <div style={{
+          background: 'white',
+          borderRadius: '24px',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          padding: '40px',
+          maxWidth: '420px',
+          width: '100%',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            width: '72px',
+            height: '72px',
+            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            borderRadius: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 24px'
+          }}>
+            <Zap color="white" size={36} />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome to OpsFlow</h1>
-          <p className="text-gray-500 mb-6">
+          <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>
+            Welcome to OpsFlow
+          </h1>
+          <p style={{ color: '#6b7280', marginBottom: '32px', lineHeight: 1.5 }}>
             The Universal Generative Admin Console. Connect all your tools in one place.
           </p>
-          <div className="text-left space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Tambo API Key</label>
-              <input
-                type="password"
-                placeholder="tam_..."
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                onChange={(e) => {
-                  if (e.target.value.trim()) {
-                    localStorage.setItem('TAMBO_KEY', e.target.value.trim());
-                  }
-                }}
-              />
-            </div>
+          <div style={{ textAlign: 'left' }}>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '8px' }}>
+              Tambo API Key
+            </label>
+            <input
+              type="password"
+              placeholder="tam_..."
+              style={{
+                width: '100%',
+                padding: '14px 16px',
+                border: '2px solid #e5e7eb',
+                borderRadius: '12px',
+                fontSize: '14px',
+                outline: 'none',
+                marginBottom: '16px',
+                boxSizing: 'border-box'
+              }}
+              onChange={(e) => {
+                if (e.target.value.trim()) {
+                  localStorage.setItem('TAMBO_KEY', e.target.value.trim());
+                }
+              }}
+            />
             <button
               onClick={() => window.location.reload()}
-              className="w-full py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium"
+              style={{
+                width: '100%',
+                padding: '14px',
+                background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                color: 'white',
+                borderRadius: '12px',
+                border: 'none',
+                fontSize: '16px',
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}
             >
               Get Started
             </button>
           </div>
-          <p className="mt-6 text-xs text-gray-400">
-            Get your API key at <a href="https://tambo.co" className="text-indigo-600 hover:underline">tambo.co</a>
+          <p style={{ marginTop: '24px', fontSize: '12px', color: '#9ca3af' }}>
+            Get your API key at <a href="https://tambo.co" style={{ color: '#6366f1' }}>tambo.co</a>
           </p>
         </div>
       </div>
